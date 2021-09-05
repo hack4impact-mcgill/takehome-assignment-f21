@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from flask import Flask, jsonify, request, Response
 import mockdb.mockdb_interface as db
 
@@ -8,7 +6,7 @@ app = Flask(__name__)
 
 def create_response(
     data: dict = None, status: int = 200, message: str = ""
-) -> Tuple[Response, int]:
+) -> tuple[Response, int]:
     """Wraps response in a consistent format throughout the API.
     
     Format inspired by https://medium.com/@shazow/how-i-design-json-api-responses-71900f00f2db
@@ -24,16 +22,16 @@ def create_response(
     :param message <str> optional message
     :returns tuple of Flask Response and int, which is what flask expects for a response
     """
-    if type(data) is not dict and data is not None:
+    try:
+        response = {
+            "code": status,
+            "success": 200 <= status < 300,
+            "message": message,
+            "result": dict(data) if data else None,
+        }
+        return jsonify(response), status
+    except TypeError:
         raise TypeError("Data should be a dictionary 😞")
-
-    response = {
-        "code": status,
-        "success": 200 <= status < 300,
-        "message": message,
-        "result": data,
-    }
-    return jsonify(response), status
 
 
 """
@@ -57,7 +55,7 @@ def get_all_shows():
 
 @app.route("/shows/<id>", methods=['DELETE'])
 def delete_show(id):
-    if db.getById('shows', int(id)) is None:
+    if not db.getById('shows', int(id)):
         return create_response(status=404, message="No show with this id exists")
     db.deleteById('shows', int(id))
     return create_response(message="Show deleted")

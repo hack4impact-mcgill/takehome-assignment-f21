@@ -13,7 +13,8 @@ def getById(type, id):
 
 
 def create(type, payload):
-    last_id = max([i["id"] for i in get(type)])
+    # `or [-1]` prevents error when all shows have been deleted
+    last_id = max([i["id"] for i in get(type)] or [-1])
     new_id = last_id + 1
     payload["id"] = new_id
     db_state[type].append(payload)
@@ -22,10 +23,10 @@ def create(type, payload):
 
 def updateById(type, id, update_values):
     item = getById(type, id)
-    if item is None:
+    if not item:
         return None
     for k, v in update_values.items():
-        if k is not "id":
+        if k != "id":
             item[k] = v
     return item
 
